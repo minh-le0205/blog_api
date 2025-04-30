@@ -16,20 +16,27 @@ class PostSeeder extends Seeder
      */
     public function run(): void
     {
-        // Tạo 1 user nếu chưa có
-        $user = User::first() ?? User::factory()->create();
+        // 1. Tạo sẵn 4 users
+        $users = User::factory(4)->create();
 
-        // Tạo categories
+        // 2. Tạo 5 categories
         Category::factory(5)->create();
 
-        // Tạo tags
+        // 3. Tạo 10 tags
         Tag::factory(10)->create();
 
-        // Tạo bài viết và gán tag
-        Post::factory(20)->create([
-            'user_id' => $user->id,
-            'category_id' => Category::inRandomOrder()->first()->id,
-        ])->each(function ($post) {
+        // 4. Tạo 20 bài viết
+        Post::factory(20)->make()->each(function ($post) use ($users) {
+            // Gán user ngẫu nhiên
+            $post->user_id = $users->random()->id;
+
+            // Gán category ngẫu nhiên
+            $post->category_id = Category::inRandomOrder()->first()->id;
+
+            // Lưu bài viết vào DB
+            $post->save();
+
+            // Gắn tag ngẫu nhiên
             $tags = Tag::inRandomOrder()->take(rand(1, 5))->pluck('id');
             $post->tags()->attach($tags);
         });

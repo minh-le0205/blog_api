@@ -21,8 +21,8 @@ class PostFactory extends Factory
         return [
             'title' => fake()->sentence(),
             'body' => fake()->paragraph(5),
-            'user_id' => User::factory(), // hoặc gán tay nếu đã có user
-            'category_id' => Category::factory(),
+            'user_id' => null, // sẽ gán trong Seeder
+            'category_id' => null, // sẽ gán trong Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ];
