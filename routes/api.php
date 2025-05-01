@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -30,5 +31,8 @@ Route::prefix('v1')->group(function () {
 
         // Category
         Route::apiResource('categories', CategoryController::class);
+
+        // Tag
+        Route::apiResource('tags', TagController::class);
     });
 });
