@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PostController;
+use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\CategoryController;
 
 /*
@@ -34,5 +35,9 @@ Route::prefix('v1')->group(function () {
 
         // Tag
         Route::apiResource('tags', TagController::class);
+
+        //Comment
+        Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
+        Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
     });
 });
