@@ -67,6 +67,7 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
+        $this->authorize('update', $post);
         // 1. Cập nhật các trường chính (nếu có trong request)
         $post->update($request->only(['title', 'body', 'category_id']));
 
@@ -87,6 +88,7 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
+        $this->authorize('delete', $post);
         // 1. Xóa bài viết (nếu dùng soft delete thì sẽ không xóa thật)
         $post->delete();
 
