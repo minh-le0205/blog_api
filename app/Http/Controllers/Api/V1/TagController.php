@@ -12,7 +12,13 @@ class TagController extends Controller
 {
     public function index()
     {
-        return TagResource::collection(Tag::latest()->paginate(10));
+        $raw = cache()->remember('tags_all_raw', 3600, function () {
+            return Tag::orderBy('name')->get()->toArray();
+        });
+
+        $collection = collect($raw)->map(fn ($tag) => (new Tag())->forceFill($tag));
+
+        return TagResource::collection($collection);
     }
 
     public function store(StoreTagRequest $request)

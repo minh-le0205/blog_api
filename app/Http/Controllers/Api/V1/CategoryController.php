@@ -15,7 +15,13 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return CategoryResource::collection(Category::latest()->paginate(10));
+        $raw = cache()->remember('categories_all_raw', 3600, function () {
+            return Category::orderBy('name')->get()->toArray();
+        });
+
+        $collection = collect($raw)->map(fn ($cat) => (new Category())->forceFill($cat));
+
+        return CategoryResource::collection($collection);
     }
 
     public function store(StoreCategoryRequest $request)
