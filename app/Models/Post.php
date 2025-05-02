@@ -14,7 +14,7 @@ class Post extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'body', 'user_id', 'category_id'];
+    protected $fillable = ['title', 'body', 'user_id', 'category_id', 'thumbnail'];
 
     public function user()
     {
@@ -34,5 +34,12 @@ class Post extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        return $this->thumbnail
+            ? asset('storage/posts/' . $this->thumbnail)
+            : null;
     }
 }

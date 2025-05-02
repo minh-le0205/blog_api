@@ -22,6 +22,7 @@ class UpdatePostRequest extends FormRequest
             'category_id' => 'sometimes|required|exists:categories,id',
             'tag_ids' => 'sometimes|array',
             'tag_ids.*' => 'exists:tags,id',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ];
     }
 
