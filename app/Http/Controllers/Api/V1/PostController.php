@@ -15,15 +15,28 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Lấy danh sách bài viết mới nhất, có phân trang, và load quan hệ
-        $posts = Post::with(['user', 'category', 'tags'])
-            ->latest()
-            ->paginate(10); // 10 bài viết mỗi trang
+        $query = Post::with(['user', 'category', 'tags'])->latest();
 
-        // 2. Trả về danh sách bằng Resource collection
-        return PostResource::collection($posts);
+        // Tìm kiếm theo tiêu đề
+        if ($request->filled('keyword')) {
+            $query->where('title', 'like', '%' . $request->keyword . '%');
+        }
+
+        // Lọc theo category
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Lọc theo nhiều tag
+        if ($request->filled('tag_ids') && is_array($request->tag_ids)) {
+            $query->whereHas('tags', function ($q) use ($request) {
+                $q->whereIn('tags.id', $request->tag_ids);
+            });
+        }
+
+        return PostResource::collection($query->paginate(10));
     }
 
     /**
