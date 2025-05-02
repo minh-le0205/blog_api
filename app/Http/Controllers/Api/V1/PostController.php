@@ -17,26 +17,28 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Post::with(['user', 'category', 'tags'])->latest();
+        $page = $request->get('page', 1);
+        $cacheKey = 'posts_index_page_' . $page . '_' . md5($request->fullUrl());
 
-        // Tìm kiếm theo tiêu đề
-        if ($request->filled('keyword')) {
-            $query->where('title', 'like', '%' . $request->keyword . '%');
-        }
+        return cache()->remember($cacheKey, 300, function () use ($request) {
+            $query = Post::with(['user', 'category', 'tags'])->latest();
 
-        // Lọc theo category
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
+            if ($request->filled('keyword')) {
+                $query->where('title', 'like', '%' . $request->keyword . '%');
+            }
 
-        // Lọc theo nhiều tag
-        if ($request->filled('tag_ids') && is_array($request->tag_ids)) {
-            $query->whereHas('tags', function ($q) use ($request) {
-                $q->whereIn('tags.id', $request->tag_ids);
-            });
-        }
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->category_id);
+            }
 
-        return PostResource::collection($query->paginate(10));
+            if ($request->filled('tag_ids') && is_array($request->tag_ids)) {
+                $query->whereHas('tags', fn ($q) => $q->whereIn('tags.id', $request->tag_ids));
+            }
+
+            $posts = $query->paginate(10);
+
+            return PostResource::collection($posts);
+        });
     }
 
     /**
