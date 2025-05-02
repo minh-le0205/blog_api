@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Http\Requests\Api\V1\StorePostRequest;
 use App\Http\Requests\Api\V1\UpdatePostRequest;
+use App\Helpers\PostCacheHelper;
 
 class PostController extends Controller
 {
@@ -17,10 +18,11 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $page = $request->get('page', 1);
-        $cacheKey = 'posts_index_page_' . $page . '_' . md5($request->fullUrl());
+        $cacheKey = PostCacheHelper::makeIndexCacheKey($request);
 
-        return cache()->remember($cacheKey, 300, function () use ($request) {
+        PostCacheHelper::rememberKey($cacheKey);
+
+        return \Cache::remember($cacheKey, 300, function () use ($request) {
             $query = Post::with(['user', 'category', 'tags'])->latest();
 
             if ($request->filled('keyword')) {
@@ -35,9 +37,7 @@ class PostController extends Controller
                 $query->whereHas('tags', fn ($q) => $q->whereIn('tags.id', $request->tag_ids));
             }
 
-            $posts = $query->paginate(10);
-
-            return PostResource::collection($posts);
+            return PostResource::collection($query->paginate(10));
         });
     }
 
@@ -65,6 +65,8 @@ class PostController extends Controller
         if ($request->has('tag_ids')) {
             $post->tags()->attach($request->tag_ids);
         }
+
+        PostCacheHelper::clearCachedIndexPages();
 
         // 4. Load quan hệ và trả về
         return new PostResource($post->load(['user', 'category', 'tags']));
@@ -113,6 +115,7 @@ class PostController extends Controller
             $post->tags()->sync($request->tag_ids);
         }
 
+        PostCacheHelper::clearCachedIndexPages();
         // 4. Load quan hệ và trả về
         return new PostResource($post->load(['user', 'category', 'tags']));
     }
@@ -123,6 +126,7 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);
+        PostCacheHelper::clearCachedIndexPages();
         // 1. Xóa bài viết (nếu dùng soft delete thì sẽ không xóa thật)
         $post->delete();
 
