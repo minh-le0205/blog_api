@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Http\Requests\Api\V1\StorePostRequest;
 use App\Http\Requests\Api\V1\UpdatePostRequest;
