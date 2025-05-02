@@ -1,18 +1,40 @@
-# 📝 Blog API (Laravel + Sanctum)
+# Blog API (Laravel + Sanctum)
 
-A simple RESTful API built with Laravel 10 and Sanctum for user authentication.
+A RESTful API for a simple blog system built with Laravel, following clean and modern development practices.
 
-## 🔧 Features
-
-- User registration, login, logout (via Sanctum)
-- CRUD for blog posts
-- Categories & tags (linked to posts)
-- JSON responses formatted via API Resources
-
-## 🛠 Tech Stack
+## 🚀 Technologies Used
 
 - Laravel 10
-- Sanctum (Token-based Auth)
+- Laravel Sanctum (API authentication)
 - MySQL
-- Postman (for testing)
-- Faker + Seeder + Factory (test data)
+- Swagger (OpenAPI documentation)
+- Postman (API testing)
+- Laravel Resource, FormRequest, Policy
+
+## ✨ Features Implemented
+
+- User authentication via Laravel Sanctum
+- CRUD for Posts (with file upload, tag/category relations)
+- CRUD for Categories and Tags
+- Commenting system (per post)
+- Search & Filter posts by keyword, category, tag
+- Authorization using Laravel Policy (only author can update/delete)
+- Auto-generated API documentation via Swagger
+
+## 📚 API Docs
+
+Available at:  
+`/api/documentation` (Swagger UI)
+
+## 📁 Postman Collections
+
+Separate collections available for:
+- Auth
+- Post
+- Category
+- Tag
+- Comment
+
+---
+
+> This project is for educational purposes and follows RESTful best practices for Laravel API development.
