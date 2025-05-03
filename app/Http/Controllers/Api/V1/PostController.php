@@ -4,41 +4,37 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use App\Traits\CachableIndex;
+use App\Helpers\PostCacheHelper;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Http\Requests\Api\V1\StorePostRequest;
 use App\Http\Requests\Api\V1\UpdatePostRequest;
-use App\Helpers\PostCacheHelper;
 
 class PostController extends Controller
 {
+    use CachableIndex;
+
+    const CACHE_TRACKER_KEY = 'posts_index_keys';
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $cacheKey = PostCacheHelper::makeIndexCacheKey($request);
+        $cacheKey = $this->makeIndexCacheKey($request, 'posts_index');
 
-        PostCacheHelper::rememberKey($cacheKey);
-
-        return \Cache::remember($cacheKey, 300, function () use ($request) {
-            $query = Post::with(['user', 'category', 'tags'])->latest();
-
-            if ($request->filled('keyword')) {
-                $query->where('title', 'like', '%' . $request->keyword . '%');
-            }
-
-            if ($request->filled('category_id')) {
-                $query->where('category_id', $request->category_id);
-            }
-
-            if ($request->filled('tag_ids') && is_array($request->tag_ids)) {
-                $query->whereHas('tags', fn ($q) => $q->whereIn('tags.id', $request->tag_ids));
-            }
-
-            return PostResource::collection($query->paginate(10));
+        $paginator = Cache::remember($cacheKey, 600, function () use ($request) {
+            return Post::with(['user', 'category', 'tags'])
+                ->latest()
+                ->filter($request)
+                ->paginate(10);
         });
+
+        $this->rememberKey(self::CACHE_TRACKER_KEY, $cacheKey);
+
+        return PostResource::collection($paginator);
     }
 
     /**
@@ -66,7 +62,7 @@ class PostController extends Controller
             $post->tags()->attach($request->tag_ids);
         }
 
-        PostCacheHelper::clearCachedIndexPages();
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
 
         // 4. Load quan hệ và trả về
         return new PostResource($post->load(['user', 'category', 'tags']));
@@ -115,7 +111,7 @@ class PostController extends Controller
             $post->tags()->sync($request->tag_ids);
         }
 
-        PostCacheHelper::clearCachedIndexPages();
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         // 4. Load quan hệ và trả về
         return new PostResource($post->load(['user', 'category', 'tags']));
     }
@@ -126,9 +122,10 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);
-        PostCacheHelper::clearCachedIndexPages();
         // 1. Xóa bài viết (nếu dùng soft delete thì sẽ không xóa thật)
         $post->delete();
+
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
 
         // 2. Trả về response JSON rỗng và status 204 (No Content)
         return response()->json(null, 204);
