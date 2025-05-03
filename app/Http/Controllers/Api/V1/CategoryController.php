@@ -37,6 +37,7 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request)
     {
         $category = Category::create($request->validated());
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         return new CategoryResource($category);
     }
 
@@ -48,12 +49,14 @@ class CategoryController extends Controller
     public function update(UpdateCategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         return new CategoryResource($category);
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         return response()->json(null, 204);
     }
 }

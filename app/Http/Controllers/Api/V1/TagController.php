@@ -35,6 +35,7 @@ class TagController extends Controller
     public function store(StoreTagRequest $request)
     {
         $tag = Tag::create($request->validated());
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         return new TagResource($tag);
     }
 
@@ -46,12 +47,14 @@ class TagController extends Controller
     public function update(UpdateTagRequest $request, Tag $tag)
     {
         $tag->update($request->validated());
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         return new TagResource($tag);
     }
 
     public function destroy(Tag $tag)
     {
         $tag->delete();
+        $this->clearCachedIndexPages(self::CACHE_TRACKER_KEY);
         return response()->json(null, 204);
     }
 }
