@@ -2,22 +2,32 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Models\Category;
+use Illuminate\Http\Request;
+use App\Traits\CachableIndex;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
+use App\Http\Resources\Api\V1\CategoryResource;
 use App\Http\Requests\Api\V1\StoreCategoryRequest;
 use App\Http\Requests\Api\V1\UpdateCategoryRequest;
-use App\Http\Resources\Api\V1\CategoryResource;
 
 class CategoryController extends Controller
 {
+    use CachableIndex;
+
+    private const CACHE_TRACKER_KEY = 'categories_cache_keys';
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $raw = cache()->remember('categories_all_raw', 3600, function () {
+        $cacheKey = $this->makeIndexCacheKey($request, 'categories_index');
+
+        $raw = Cache::remember($cacheKey, 3600, function () {
             return Category::orderBy('name')->get()->toArray();
         });
+
+        $this->rememberKey(self::CACHE_TRACKER_KEY, $cacheKey);
 
         $collection = collect($raw)->map(fn ($cat) => (new Category())->forceFill($cat));
 

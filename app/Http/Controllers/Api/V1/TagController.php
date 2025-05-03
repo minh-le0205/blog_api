@@ -2,19 +2,30 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Models\Tag;
+use Illuminate\Http\Request;
+use App\Traits\CachableIndex;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
+use App\Http\Resources\Api\V1\TagResource;
 use App\Http\Requests\Api\V1\StoreTagRequest;
 use App\Http\Requests\Api\V1\UpdateTagRequest;
-use App\Http\Resources\Api\V1\TagResource;
 
 class TagController extends Controller
 {
-    public function index()
+    use CachableIndex;
+
+    private const CACHE_TRACKER_KEY = 'tags_cache_keys';
+
+    public function index(Request $request)
     {
-        $raw = cache()->remember('tags_all_raw', 3600, function () {
+        $cacheKey = $this->makeIndexCacheKey($request, 'tags_index');
+
+        $raw = Cache::remember($cacheKey, 3600, function () {
             return Tag::orderBy('name')->get()->toArray();
         });
+
+        $this->rememberKey(self::CACHE_TRACKER_KEY, $cacheKey);
 
         $collection = collect($raw)->map(fn ($tag) => (new Tag())->forceFill($tag));
 
